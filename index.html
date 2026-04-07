@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lime Chat</title>
+    <style>
+        body { font-family: sans-serif; background-color: #f5f7fb; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .auth-card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 90%; max-width: 380px; text-align: center; }
+        h1 { color: #2ecc71; font-size: 24px; margin-bottom: 20px; }
+        .input-group { display: flex; gap: 5px; margin-bottom: 10px; }
+        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 15px; }
+        .small-input { width: 33%; }
+        .main-btn { width: 100%; padding: 14px; background: #2ecc71; color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 10px; }
+        .toggle-mode { margin-top: 20px; font-size: 13px; color: #888; cursor: pointer; text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+<div class="auth-card" id="auth-box">
+    <h1 id="title">Lime Chat 로그인</h1>
+    
+    <div id="register-fields" style="display: none;">
+        <input type="text" id="school" placeholder="학교 이름" style="margin-bottom:10px;">
+        <div class="input-group">
+            <input type="number" id="grade" class="small-input" placeholder="학년">
+            <input type="number" id="class" class="small-input" placeholder="반">
+            <input type="number" id="num" class="small-input" placeholder="번호">
+        </div>
+        <input type="text" id="name" placeholder="이름" style="margin-bottom:10px;">
+    </div>
+
+    <input type="text" id="uid" placeholder="아이디" style="margin-bottom:10px;">
+    <input type="password" id="upw" placeholder="비밀번호" style="margin-bottom:10px;">
+    
+    <button class="main-btn" onclick="auth()" id="btn-text">로그인</button>
+    <div class="toggle-mode" onclick="toggleMode()" id="toggle-text">계정이 없으신가요? 회원가입</div>
+</div>
+
+<script>
+    let isReg = false;
+
+    function toggleMode() {
+        isReg = !isReg;
+        document.getElementById('title').innerText = isReg ? "Lime Chat 회원가입" : "Lime Chat 로그인";
+        document.getElementById('btn-text').innerText = isReg ? "가입하기" : "로그인";
+        document.getElementById('toggle-text').innerText = isReg ? "이미 계정이 있나요? 로그인" : "계정이 없으신가요? 회원가입";
+        document.getElementById('register-fields').style.display = isReg ? "block" : "none";
+    }
+
+    function auth() {
+        const id = document.getElementById('uid').value;
+        const pw = document.getElementById('upw').value;
+
+        if(!id || !pw) return alert("아이디와 비밀번호를 입력해주세요!");
+
+        if(isReg) {
+            // 회원가입 정보 수집
+            const info = {
+                pw: pw,
+                school: document.getElementById('school').value,
+                grade: document.getElementById('grade').value,
+                class: document.getElementById('class').value,
+                num: document.getElementById('num').value,
+                name: document.getElementById('name').value
+            };
+            
+            if(!info.name || !info.school) return alert("학교와 이름 정보를 모두 입력해주세요!");
+
+            // 로컬 저장소에 저장
+            localStorage.setItem(id, JSON.stringify(info));
+            alert(info.name + "님, 가입을 축하합니다! 이제 로그인해주세요.");
+            toggleMode();
+        } else {
+            // 로그인 확인
+            const data = localStorage.getItem(id);
+            if(data) {
+                const user = JSON.parse(data);
+                if(user.pw === pw) {
+                    // 이름뒤에 번호 형식 (예: 오서빈7)
+                    const displayName = user.name + user.num;
+                    alert(displayName + "님, 환영합니다!");
+                    // 다음 단계: 채팅방 화면으로 이동 로직 추가 예정
+                } else {
+                    alert("비밀번호가 틀렸습니다.");
+                }
+            } else {
+                alert("존재하지 않는 아이디입니다.");
+            }
+        }
+    }
+</script>
+
+</body>
+</html>
