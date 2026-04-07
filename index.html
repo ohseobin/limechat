@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lime Chat</title>
+    <style>
+        body { font-family: -apple-system, sans-serif; background-color: #e5ddd5; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .app-container { width: 100%; max-width: 400px; height: 95vh; background: white; display: flex; flex-direction: column; border-radius: 12px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        
+        /* 상단 바 */
+        .header { background: #075e54; color: white; padding: 12px 15px; display: flex; align-items: center; justify-content: space-between; font-weight: bold; font-size: 17px; }
+        
+        /* 입력 폼 (간격 좁게) */
+        .auth-form { padding: 20px; display: flex; flex-direction: column; gap: 8px; }
+        .input-row { display: flex; gap: 5px; }
+        input { padding: 10px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 14px; outline: none; background: #fafafa; }
+        .main-btn { background: #25d366; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 5px; }
+        .toggle-btn { font-size: 13px; color: #075e54; text-align: center; margin-top: 10px; cursor: pointer; text-decoration: underline; }
+
+        /* 채팅 화면 */
+        #chat-screen { display: none; flex-direction: column; height: 100%; background: #efe7dd; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); }
+        #messages { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 6px; }
+        
+        /* 말풍선 */
+        .bubble { max-width: 75%; padding: 6px 10px; border-radius: 8px; font-size: 14px; position: relative; box-shadow: 0 1px 1px rgba(0,0,0,0.1); line-height: 1.4; }
+        .name-label { font-size: 11px; font-weight: bold; color: #075e54; margin-bottom: 2px; display: block; }
+        .outgoing { background: #dcf8c6; align-self: flex-end; }
+        .incoming { background: white; align-self: flex-start; }
+        
+        /* 하단 입력바 */
+        .input-bar { background: #f0f0f0; padding: 8px; display: flex; align-items: center; gap: 8px; }
+        #msg-input { flex: 1; border: none; padding: 10px 15px; border-radius: 20px; outline: none; }
+        .icon-label { font-size: 22px; cursor: pointer; color: #555; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="header">
+        <span id="header-title">Lime Chat</span>
+        <span id="user-display" style="font-size: 12px; opacity: 0.8;"></span>
+    </div>
+
+    <div id="auth-screen" class="auth-form">
+        <h2 id="auth-title" style="margin: 0 0 5px 0;">로그인</h2>
+        <div id="reg-fields" style="display:none; flex-direction: column; gap: 8px;">
+            <input type="text" id="school" placeholder="학교">
+            <div class="input-row">
+                <input type="number" id="grade" placeholder="학년" style="width:33%">
+                <input type="number" id="class" placeholder="반" style="width:33%">
+                <input type="number" id="num" placeholder="번호" style="width:33%">
+            </div>
+            <input type="text" id="name" placeholder="이름">
+        </div>
+        <input type="text" id="uid" placeholder="아이디">
+        <input type="password" id="upw" placeholder="비밀번호">
+        <button class="main-btn" onclick="handleAuth()" id="btn-text">단톡방 입장</button>
+        <div class="toggle-btn" onclick="toggleAuth()" id="toggle-text">처음이신가요? 회원가입</div>
+    </div>
+
+    <div id="chat-screen">
+        <div id="messages"></div>
+        <div class="input-bar">
+            <label for="file-input" class="icon-label">📎</label>
+            <input type="file" id="file-input" style="display:none;" accept="image/*" onchange="sendImg(event)">
+            <input type="text" id="msg-input" placeholder="메시지 입력..." onkeypress="if(event.keyCode==13) sendTxt()">
+            <span style="color:#075e54; font-weight:bold; cursor:pointer;" onclick="sendTxt()">전송</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    let isReg = false;
+    let myName = "";
+
+    function toggleAuth() {
+        isReg = !isReg;
+        document.getElementById('auth-title').innerText = isReg ? "회원가입" : "로그인";
+        document.getElementById('btn-text').innerText = isReg ? "가입하기" : "단톡방 입장";
+        document.getElementById('reg-fields').style.display = isReg ? "flex" : "none";
+    }
+
+    function handleAuth() {
+        const id = document.getElementById('uid').value;
+        const pw = document.getElementById('upw').value;
+        if(isReg) {
+            const n = document.getElementById('name').value;
+            const no = document.getElementById('num').value;
+            if(!n || !no) return alert("이름과 번호를 써줘!");
+            localStorage.setItem(id, JSON.stringify({pw, n, no}));
+            alert("가입 완료! 이제 로그인해."); toggleAuth();
+        } else {
+            const data = JSON.parse(localStorage.getItem(id));
+            if(data && data.pw === pw) {
+                myName = data.n + data.no;
+                startChat();
+            } else { alert("아이디나 비번이 틀려!"); }
+        }
+    }
+
+    function startChat() {
+        document.getElementById('auth-screen').style.display = 'none';
+        document.getElementById('chat-screen').style.display = 'flex';
+        document.getElementById('header-title').innerText = "6학년 6반 단톡방";
+        document.getElementById('user-display').innerText = myName;
+    }
+
+    function sendTxt() {
+        const i = document.getElementById('msg-input');
+        if(!i.value) return;
+        addMsg(`<span class="name-label">${myName}</span>${i.value}`, 'outgoing');
+        i.value = "";
+    }
+
+    function sendImg(e) {
+        const f = e.target.files[0];
+        if(f) {
+            const r = new FileReader();
+            r.onload = (ev) => addMsg(`<span class="name-label">${myName}</span><img src="${ev.target.result}" style="max-width:100%; border-radius:5px; margin-top:5px;">`, 'outgoing');
+            r.readAsDataURL(f);
+        }
+    }
+
+    function addMsg(html, type) {
+        const m = document.getElementById('messages');
+        const d = document.createElement('div');
+        d.className = "bubble " + type;
+        d.innerHTML = html;
+        m.appendChild(d);
+        m.scrollTop = m.scrollHeight;
+    }
+</script>
+</body>
+</html>
