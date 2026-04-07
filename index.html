@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lime Chat - Admin Osb</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; line-height: 1.6; }
+        .admin-note { color: #e74c3c; font-weight: bold; border: 1px solid #e74c3c; padding: 10px; border-radius: 5px; }
+        .login-box { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; max-width: 300px; }
+        input, button { padding: 10px; font-size: 16px; }
+    </style>
+</head>
+<body>
+    <h1>Lime Chat 가입</h1>
+    
+    <div class="admin-note">
+        <p>※ 관리자 정보: 6학년 6반 7번 오서빈</p>
+        <p>본 서비스는 운영 및 보안을 위해 관리자가 대화 내용을 모니터링할 수 있습니다. 이에 동의하십니까?</p>
+        <input type="checkbox" id="agree"> <label for="agree">동의합니다 (필수)</label>
+    </div>
+
+    <div class="login-box">
+        <input type="text" id="uid" placeholder="아이디 (osb337)">
+        <input type="password" id="upw" placeholder="비밀번호">
+        <button onclick="checkAuth()">접속하기</button>
+    </div>
+
+    <script>
+        function checkAuth() {
+            const id = document.getElementById('uid').value;
+            const pw = document.getElementById('upw').value;
+            const agreed = document.getElementById('agree').checked;
+
+            if(!agreed) {
+                alert("개인정보 보호법 및 관리자 확인 약관에 동의해야 합니다.");
+                return;
+            }
+
+            if(id === "osb337" && pw === "Osb337337!") {
+                alert("관리자(오서빈)님, 환영합니다. 모든 채팅방 관리 권한이 부여되었습니다.");
+                // 나중에 여기에 채팅방 화면 연결
+            } else {
+                alert("일반 사용자로 로그인되었습니다.");
+            }
+        }
+    </script>
+</body>
+</html>
