@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lime Chat</title>
+    <style>
+        body { font-family: -apple-system, sans-serif; background-color: #e5ddd5; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .app-container { width: 100%; max-width: 400px; height: 90vh; background: white; display: flex; flex-direction: column; border-radius: 12px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        
+        .header { background: #075e54; color: white; padding: 12px 15px; display: flex; align-items: center; gap: 10px; font-weight: bold; font-size: 17px; }
+        .back-btn { cursor: pointer; display: none; }
+
+        /* 입력 필드 간격 대폭 축소 */
+        .auth-form { padding: 20px; display: flex; flex-direction: column; gap: 8px; } /* gap을 8px로 줄임 */
+        .input-row { display: flex; gap: 5px; }
+        input { padding: 10px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 14px; outline: none; background: #fafafa; }
+        input:focus { border-color: #25d366; }
+        
+        .main-btn { background: #25d366; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 5px; }
+        .toggle-btn { font-size: 13px; color: #075e54; text-align: center; margin-top: 10px; cursor: pointer; text-decoration: underline; }
+
+        /* 채팅 화면 */
+        #chat-screen { display: none; flex-direction: column; height: 100%; background: #efe7dd; }
+        #messages { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 6px; }
+        .bubble { max-width: 75%; padding: 6px 10px; border-radius: 8px; font-size: 14px; position: relative; box-shadow: 0 1px 1px rgba(0,0,0,0.1); }
+        .outgoing { background: #dcf8c6; align-self: flex-end; }
+        .incoming { background: white; align-self: flex-start; }
+        
+        .input-bar { background: #f0f0f0; padding: 8px; display: flex; align-items: center; gap: 5px; }
+        #msg-input { flex: 1; border: none; padding: 8px 12px; border-radius: 20px; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="header">
+        <span class="back-btn" id="back-btn" onclick="showList()">←</span>
+        <span id="header-title">Lime Chat</span>
+    </div>
+
+    <div id="auth-screen" class="auth-form">
+        <h2 id="auth-title" style="margin: 0 0 10px 0; font-size: 20px;">로그인</h2>
+        <div id="reg-fields" style="display:none; flex-direction: column; gap: 8px;">
+            <input type="text" id="school" placeholder="학교">
+            <div class="input-row">
+                <input type="number" id="grade" placeholder="학년" style="width:33%">
+                <input type="number" id="class" placeholder="반" style="width:33%">
+                <input type="number" id="num" placeholder="번호" style="width:33%">
+            </div>
+            <input type="text" id="name" placeholder="이름">
+        </div>
+        <input type="text" id="uid" placeholder="아이디">
+        <input type="password" id="upw" placeholder="비밀번호">
+        <button class="main-btn" onclick="handleAuth()" id="btn-text">시작하기</button>
+        <div class="toggle-btn" onclick="toggleAuth()" id="toggle-text">회원가입 하기</div>
+    </div>
+
+    <div id="list-screen" style="display:none; flex-direction: column;">
+        <div style="padding:15px; border-bottom:1px solid #eee;" onclick="enterChat('6-6 단톡방')">👥 6학년 6반 단톡방</div>
+        <div style="padding:15px; border-bottom:1px solid #eee;" onclick="enterChat('선생님')">👤 선생님 (1:1)</div>
+    </div>
+
+    <div id="chat-screen">
+        <div id="messages"></div>
+        <div class="input-bar">
+            <label for="file-input" style="font-size:20px; cursor:pointer;">📎</label>
+            <input type="file" id="file-input" style="display:none;" onchange="sendImg(event)">
+            <input type="text" id="msg-input" placeholder="메시지..." onkeypress="if(event.keyCode==13) sendTxt()">
+            <button onclick="sendTxt()" style="background:none; border:none; color:#075e54; font-weight:bold;">전송</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let isReg = false;
+    let user = "";
+
+    function toggleAuth() {
+        isReg = !isReg;
+        document.getElementById('auth-title').innerText = isReg ? "회원가입" : "로그인";
+        document.getElementById('btn-text').innerText = isReg ? "가입하기" : "로그인";
+        document.getElementById('reg-fields').style.display = isReg ? "flex" : "none";
+    }
+
+    function handleAuth() {
+        const id = document.getElementById('uid').value;
+        const pw = document.getElementById('upw').value;
+        if(isReg) {
+            const n = document.getElementById('name').value;
+            const no = document.getElementById('num').value;
+            localStorage.setItem(id, JSON.stringify({pw, n, no}));
+            alert("가입 완료!"); toggleAuth();
+        } else {
+            const d = JSON.parse(localStorage.getItem(id));
+            if(d && d.pw === pw) {
+                user = d.n + d.no;
+                showList();
+            } else { alert("정보 확인!"); }
+        }
+    }
+
+    function showList() {
+        document.getElementById('auth-screen').style.display = 'none';
+        document.getElementById('chat-screen').style.display = 'none';
+        document.getElementById('list-screen').style.display = 'flex';
+        document.getElementById('header-title').innerText = "채팅 목록";
+    }
+
+    function enterChat(name) {
+        document.getElementById('list-screen').style.display = 'none';
+        document.getElementById('chat-screen').style.display = 'flex';
+        document.getElementById('back-btn').style.display = 'inline';
+        document.getElementById('header-title').innerText = name;
+    }
+
+    function sendTxt() {
+        const i = document.getElementById('msg-input');
+        if(!i.value) return;
+        addMsg(user + ": " + i.value, 'outgoing');
+        i.value = "";
+    }
+
+    function sendImg(e) {
+        const f = e.target.files[0];
+        if(f) {
+            const r = new FileReader();
+            r.onload = (ev) => addMsg(`${user}: <img src="${ev.target.result}" style="max-width:100%; border-radius:5px;">`, 'outgoing');
+            r.readAsDataURL(f);
+        }
+    }
+
+    function addMsg(c, t) {
+        const m = document.getElementById('messages');
+        const d = document.createElement('div');
+        d.className = "bubble " + t;
+        d.innerHTML = c;
+        m.appendChild(d);
+        m.scrollTop = m.scrollHeight;
+    }
+</script>
+</body>
+</html>
